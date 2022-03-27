@@ -1,50 +1,43 @@
 import * as THREE from 'three';
 
+const cursor = {
+    x: 0,
+    y: 0
+};
+
+window.addEventListener('mousemove', (event: MouseEvent) => {
+    cursor.x = event.clientX / window.innerWidth - 0.5;
+    cursor.y = event.clientY / window.innerHeight - 0.5;
+})
+
 const scene = new THREE.Scene();
-
-
-
-const group = new THREE.Group();
-scene.add(group);
 
 const cube1 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshNormalMaterial());
 
-const cube2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshNormalMaterial());
 
-cube2.position.x = -2;
+scene.add(cube1);
 
-const cube3 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshNormalMaterial());
+cube1.position.y = 0.4;
 
-cube3.position.x = 2;
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 10);
+camera.position.z = 4;
+camera.lookAt(cube1.position)
 
-group.add(cube1, cube2, cube3);
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setAnimationLoop(animation);
+document.body.appendChild(renderer.domElement);
 
+// const clock = new THREE.Clock();
 
-scene.add( group );
-const axesHelper = new THREE.AxesHelper();
-scene.add(axesHelper);
+function animation() {
 
-group.position.y = 0.4;
+    // const elapsedTime = clock.getElapsedTime();
+    // cube1.rotation.y = elapsedTime;
+    camera.position.x = cursor.x * 3;
+    camera.position.y = - (cursor.y * 3);
 
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.01, 10 );
-camera.position.z = 8;
-camera.position.y = 0.2;
-camera.position.x = 0.1;
-camera.lookAt(group.position)
-
-const renderer = new THREE.WebGLRenderer( { antialias: true } );
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.setAnimationLoop( animation );
-document.body.appendChild( renderer.domElement );
-
-function animation( time: number ) {
-
-    group.rotation.x = time / 2000;
-    group.rotation.y = time / 1000;
-
-    renderer.render( scene, camera );
+    renderer.render(scene, camera);
 
 }
