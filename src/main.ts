@@ -4,16 +4,27 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 const scene = new THREE.Scene();
 
-const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshNormalMaterial());
+const geometry = new THREE.BufferGeometry();
 
-scene.add(cube);
+const count = 5000;
+const positions = new Float32Array(count * 3 * 3);
 
-cube.position.y = 0.4;
+for (let i = 0; i < count * 3 * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 2;
+}
+
+// itemSize = 3 because there are 3 values (components) per vertex
+geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const material = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
+const mesh = new THREE.Mesh(geometry, material);
+
+scene.add(mesh);
+
+mesh.position.y = 0.4;
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 10);
-camera.position.z = 4;
-camera.lookAt(cube.position);
+camera.position.z = 3;
+camera.lookAt(mesh.position);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
