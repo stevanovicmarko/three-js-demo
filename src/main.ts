@@ -1,22 +1,13 @@
 import * as THREE from 'three';
 import "./style.css";
+import * as dat from "dat.gui";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 const scene = new THREE.Scene();
 
-const geometry = new THREE.BufferGeometry();
-
-const count = 5000;
-const positions = new Float32Array(count * 3 * 3);
-
-for (let i = 0; i < count * 3 * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 2;
-}
-
-// itemSize = 3 because there are 3 values (components) per vertex
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-const material = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
-const mesh = new THREE.Mesh(geometry, material);
+const material = new THREE.MeshNormalMaterial({wireframe: false});
+const boxGeometry = new THREE.BoxGeometry();
+const mesh = new THREE.Mesh(boxGeometry, material);
 
 scene.add(mesh);
 
@@ -52,6 +43,16 @@ window.addEventListener("dblclick", () => {
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+
+/*
+  Debug
+ */
+const gui = new dat.GUI();
+gui.add(mesh.position, 'x').min(-2).max(2).step(0.01);
+gui.add(mesh.position, 'y').min(-2).max(2).step(0.01);
+gui.add(mesh.position, 'z').min(-2).max(2).step(0.01);
+gui.add(mesh, 'visible');
+gui.add(mesh.material, 'wireframe');
 
 function animation() {
     controls.update();
