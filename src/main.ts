@@ -5,7 +5,14 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 const scene = new THREE.Scene();
 
-const material = new THREE.MeshNormalMaterial({wireframe: false});
+const loadingManager = new THREE.LoadingManager();
+const textureLoader = new THREE.TextureLoader(loadingManager);
+const texture = textureLoader.load("../resources/texture.jpg");
+texture.rotation = Math.PI / 4;
+texture.center.x = 0.5;
+texture.center.y = 0.5;
+
+const material = new THREE.MeshBasicMaterial({ map: texture });
 const boxGeometry = new THREE.BoxGeometry();
 const mesh = new THREE.Mesh(boxGeometry, material);
 
