@@ -7,13 +7,14 @@ const scene = new THREE.Scene();
 
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);
+
 const doorColorTexture = textureLoader.load("../resources/door/color.jpg");
-// const doorAlphaMap = textureLoader.load("../resources/door/alpha.jpg");
+const doorAlphaMap = textureLoader.load("../resources/door/alpha.jpg");
 const doorAmbientOcclusionTexture = textureLoader.load("../resources/door/ambientOcclusion.jpg");
-// const doorHeightTexture = textureLoader.load("../resources/door/height.jpg");
-// const doorNormalTexture = textureLoader.load("../resources/door/normal.jpg");
-// const doorMetalnessTexture = textureLoader.load("../resources/door/metalness.jpg");
-// const doorRoughnessTexture = textureLoader.load("../resources/door/roughness.jpg");
+const doorHeightTexture = textureLoader.load("../resources/door/height.jpg");
+const doorNormalTexture = textureLoader.load("../resources/door/normal.jpg");
+const doorMetalnessTexture = textureLoader.load("../resources/door/metalness.jpg");
+const doorRoughnessTexture = textureLoader.load("../resources/door/roughness.jpg");
 // const matcapTexture = textureLoader.load("../resources/door/matcaps/1.png");
 // const gradientTexture = textureLoader.load("../resources/door/matcaps/2.png");
 
@@ -25,25 +26,30 @@ scene.add(ambientLight);
 scene.add(pointLight);
 
 const material = new THREE.MeshStandardMaterial({
-    metalness: 0.1,
-    roughness: 0.3,
+    alphaMap: doorAlphaMap,
+    metalnessMap: doorMetalnessTexture,
+    transparent: true,
+    roughnessMap: doorRoughnessTexture,
     map: doorColorTexture,
+    normalMap: doorNormalTexture,
+    displacementMap: doorHeightTexture,
+    displacementScale: 0.05,
     aoMap: doorAmbientOcclusionTexture,
     side: THREE.DoubleSide
 });
 
-const sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 16, 16), material);
+const sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 64, 64), material);
 sphere.geometry.setAttribute('uv2', new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2));
 
-const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), material);
+const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1, 100, 100), material);
 plane.geometry.setAttribute('uv2', new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2));
 
-const torus = new THREE.Mesh(new THREE.TorusBufferGeometry(0.3, 0.1, 16, 32), material);
+const torus = new THREE.Mesh(new THREE.TorusBufferGeometry(0.3, 0.1, 64, 128), material);
 torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2));
 
 scene.add(sphere);
 scene.add(plane);
-scene.add(torus)
+scene.add(torus);
 
 
 sphere.position.x = -2;
@@ -87,6 +93,7 @@ const gui = new dat.GUI();
 gui.add(material, 'metalness').min(0).max(1).step(0.0001);
 gui.add(material, 'roughness').min(0).max(1).step(0.0001);
 gui.add(material, 'aoMapIntensity').min(0).max(10).step(0.001);
+gui.add(material, 'displacementScale').min(0).max(1).step(0.0001);
 
 
 function animation() {
