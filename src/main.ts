@@ -15,47 +15,48 @@ const doorHeightTexture = textureLoader.load("../resources/door/height.jpg");
 const doorNormalTexture = textureLoader.load("../resources/door/normal.jpg");
 const doorMetalnessTexture = textureLoader.load("../resources/door/metalness.jpg");
 const doorRoughnessTexture = textureLoader.load("../resources/door/roughness.jpg");
-// const matcapTexture = textureLoader.load("../resources/door/matcaps/1.png");
-// const gradientTexture = textureLoader.load("../resources/door/matcaps/2.png");
 
+const axesHelper = new THREE.AxesHelper( 5 );
+scene.add(axesHelper);
 // Lights
 const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.5);
+const directionalLight = new THREE.DirectionalLight(0x0000FF, 0.5);
 const pointLight = new THREE.PointLight(0xFFFFFF, 0.5);
-pointLight.position.set(2, 3, 4);
-scene.add(ambientLight);
-scene.add(pointLight);
+pointLight.position.set(2, -1.5, 0);
+const hemisphereLight = new THREE.HemisphereLight(0xff0000, 0x0000ff, 0.3);
 
-const material = new THREE.MeshStandardMaterial({
-    alphaMap: doorAlphaMap,
-    metalnessMap: doorMetalnessTexture,
-    transparent: true,
-    roughnessMap: doorRoughnessTexture,
-    map: doorColorTexture,
-    normalMap: doorNormalTexture,
-    displacementMap: doorHeightTexture,
-    displacementScale: 0.05,
-    aoMap: doorAmbientOcclusionTexture,
-    side: THREE.DoubleSide
-});
+scene.add(ambientLight)
+    .add(directionalLight)
+    .add(hemisphereLight)
+    .add(pointLight);
+
+const material = new THREE.MeshStandardMaterial();
 
 const sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 64, 64), material);
 sphere.geometry.setAttribute('uv2', new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2));
 
-const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1, 100, 100), material);
+const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshStandardMaterial());
+cube.geometry.setAttribute('uv2', new THREE.BufferAttribute(cube.geometry.attributes.uv.array, 2));
+
+
+const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(8, 8, 100, 100), material);
 plane.geometry.setAttribute('uv2', new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2));
 
 const torus = new THREE.Mesh(new THREE.TorusBufferGeometry(0.3, 0.1, 64, 128), material);
 torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2));
 
-scene.add(sphere);
-scene.add(plane);
-scene.add(torus);
+scene.add(sphere)
+    .add(plane)
+    .add(cube)
+    .add(torus);
 
 
 sphere.position.x = -2;
 torus.position.x = 2;
+plane.position.y = -2;
+plane.rotation.x = -Math.PI / 2;
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 10);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 25);
 camera.position.z = 3;
 camera.lookAt(sphere.position);
 
