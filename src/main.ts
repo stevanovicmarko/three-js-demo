@@ -19,31 +19,34 @@ const doorRoughnessTexture = textureLoader.load("../resources/door/roughness.jpg
 const axesHelper = new THREE.AxesHelper( 5 );
 scene.add(axesHelper);
 // Lights
-const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.5);
-const directionalLight = new THREE.DirectionalLight(0x0000FF, 0.5);
-const pointLight = new THREE.PointLight(0xFFFFFF, 0.5);
-pointLight.position.set(2, -1.5, 0);
-const hemisphereLight = new THREE.HemisphereLight(0xff0000, 0x0000ff, 0.3);
+const ambientLight = new THREE.AmbientLight(0x111111, 0.5);
+const directionalLight = new THREE.DirectionalLight(0xdddddd, 0.5);
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 1024;
+directionalLight.shadow.mapSize.height = 1024;
+directionalLight.shadow.camera.far = 6;
 
 scene.add(ambientLight)
-    .add(directionalLight)
-    .add(hemisphereLight)
-    .add(pointLight);
+    .add(directionalLight);
 
 const material = new THREE.MeshStandardMaterial();
 
 const sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 64, 64), material);
 sphere.geometry.setAttribute('uv2', new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2));
+sphere.castShadow = true;
 
 const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshStandardMaterial());
 cube.geometry.setAttribute('uv2', new THREE.BufferAttribute(cube.geometry.attributes.uv.array, 2));
+cube.castShadow = true;
 
 
 const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(8, 8, 100, 100), material);
 plane.geometry.setAttribute('uv2', new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2));
+plane.receiveShadow = true;
 
 const torus = new THREE.Mesh(new THREE.TorusBufferGeometry(0.3, 0.1, 64, 128), material);
-torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2));
+torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2))
+torus.castShadow = true;
 
 scene.add(sphere)
     .add(plane)
@@ -61,10 +64,15 @@ camera.position.z = 3;
 camera.lookAt(sphere.position);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animation);
 
+directionalLight.position.z = 1;
+directionalLight.lookAt(sphere.position);
+const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+scene.add(directionalLightCameraHelper);
 
 renderer.domElement.className = "web-gl";
 document.body.appendChild(renderer.domElement);
