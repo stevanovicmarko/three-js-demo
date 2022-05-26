@@ -22,12 +22,21 @@ scene.add(axesHelper);
 const ambientLight = new THREE.AmbientLight(0x111111, 0.5);
 const directionalLight = new THREE.DirectionalLight(0xdddddd, 0.5);
 directionalLight.castShadow = true;
+directionalLight.shadow.radius = 5;
 directionalLight.shadow.mapSize.width = 1024;
 directionalLight.shadow.mapSize.height = 1024;
 directionalLight.shadow.camera.far = 6;
 
 scene.add(ambientLight)
     .add(directionalLight);
+
+const spotLight = new THREE.SpotLight(0xffffff, 0.4, 10, Math.PI * 0.3);
+spotLight.castShadow = true;
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+spotLight.position.set(2, 2, 2);
+scene.add(spotLight);
+scene.add(spotLight.target);
 
 const material = new THREE.MeshStandardMaterial();
 
@@ -65,14 +74,17 @@ camera.lookAt(sphere.position);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animation);
 
 directionalLight.position.z = 1;
 directionalLight.lookAt(sphere.position);
-const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-scene.add(directionalLightCameraHelper);
+// const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+// scene.add(directionalLightCameraHelper);
+// const spotLightCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
+// scene.add(spotLightCameraHelper);
 
 renderer.domElement.className = "web-gl";
 document.body.appendChild(renderer.domElement);
