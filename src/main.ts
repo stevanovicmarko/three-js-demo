@@ -18,73 +18,85 @@ const doorRoughnessTexture = textureLoader.load("../resources/door/roughness.jpg
 
 const axesHelper = new THREE.AxesHelper( 5 );
 scene.add(axesHelper);
-// Lights
-const ambientLight = new THREE.AmbientLight(0x111111, 0.5);
-const directionalLight = new THREE.DirectionalLight(0xdddddd, 0.5);
-directionalLight.castShadow = true;
-directionalLight.shadow.radius = 5;
-directionalLight.shadow.mapSize.width = 1024;
-directionalLight.shadow.mapSize.height = 1024;
-directionalLight.shadow.camera.far = 6;
-
-scene.add(ambientLight)
-    .add(directionalLight);
-
-const spotLight = new THREE.SpotLight(0xffffff, 0.4, 10, Math.PI * 0.3);
-spotLight.castShadow = true;
-spotLight.shadow.mapSize.width = 1024;
-spotLight.shadow.mapSize.height = 1024;
-spotLight.position.set(2, 2, 2);
-scene.add(spotLight);
-scene.add(spotLight.target);
-
-const material = new THREE.MeshStandardMaterial();
-
-const sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 64, 64), material);
-sphere.geometry.setAttribute('uv2', new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2));
-sphere.castShadow = true;
-
-const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshStandardMaterial());
-cube.geometry.setAttribute('uv2', new THREE.BufferAttribute(cube.geometry.attributes.uv.array, 2));
-cube.castShadow = true;
 
 
-const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(8, 8, 100, 100), material);
-plane.geometry.setAttribute('uv2', new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2));
-plane.receiveShadow = true;
+const floor = new THREE.Mesh(new THREE.PlaneBufferGeometry(20, 20), new THREE.MeshStandardMaterial({color: 0xa9c388}));
+floor.rotation.x = -Math.PI * 0.5;
+floor.position.y = 0;
+// floor.geometry.setAttribute('uv2', new THREE.BufferAttribute(floor.geometry.attributes.uv.array, 2));
+scene.add(floor);
 
-const torus = new THREE.Mesh(new THREE.TorusBufferGeometry(0.3, 0.1, 64, 128), material);
-torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2))
-torus.castShadow = true;
+const house = new THREE.Group();
+const walls = new THREE.Mesh(new THREE.BoxBufferGeometry(4, 2.5, 4), new THREE.MeshStandardMaterial({
+    color: 0xac8e82
+}));
+walls.position.y = 1.25;
+house.add(walls);
 
-scene.add(sphere)
-    .add(plane)
-    .add(cube)
-    .add(torus);
+const roof = new THREE.Mesh(
+    new THREE.ConeBufferGeometry(3.5, 1, 4),
+    new THREE.MeshStandardMaterial({color: 0xb35f45})
+);
+house.add(roof);
+roof.position.y = 2.5 + 0.5;
+roof.rotation.y = Math.PI * 0.25;
 
+const door = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), new THREE.MeshStandardMaterial({color: 0xaa7b7b}));
+house.add(door);
+door.position.y = 1;
+door.position.z = 2 + 0.01;
 
-sphere.position.x = -2;
-torus.position.x = 2;
-plane.position.y = -2;
-plane.rotation.x = -Math.PI / 2;
+scene.add(house);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 25);
-camera.position.z = 3;
-camera.lookAt(sphere.position);
+const bushGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
+const bushMaterial = new THREE.MeshStandardMaterial({color: 0x89c854});
+
+const bush1 = new THREE.Mesh(bushGeometry, bushMaterial);
+bush1.scale.set(0.5, 0.5, 0.5);
+bush1.position.set(0.8, 0.2, 2.2);
+
+const bush2 = new THREE.Mesh(bushGeometry, bushMaterial);
+bush2.scale.set(0.25, 0.25, 0.25);
+bush2.position.set(1.4, 0.1, 2.1);
+
+const bush3 = new THREE.Mesh(bushGeometry, bushMaterial);
+bush3.scale.set(0.4, 0.4, 0.4);
+bush3.position.set(-0.8, 0.1, 2.2);
+
+const bush4 = new THREE.Mesh(bushGeometry, bushMaterial);
+bush4.scale.set(0.15, 0.15, 0.15);
+bush4.position.set(-1, 0.05, 2.6);
+
+for (const bush of [bush1, bush2, bush3, bush4]) {
+    house.add(bush);
+}
+
+const graves = new THREE.Group();
+scene.add(graves);
+const graveGeometry = new THREE.BoxBufferGeometry(0.6, 0.8, 0.2);
+const graveMaterial = new THREE.MeshStandardMaterial({color: 0xb2b6b1});
+for (let i = 0; i < 50; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 3 + Math.random() * 6;
+    const x = Math.sin(angle) * radius;
+    const z = Math.cos(angle) * radius;
+    const grave = new THREE.Mesh(graveGeometry, graveMaterial);
+    grave.position.set(x, 0.4, z);
+    grave.rotation.y = (Math.random() - 0.5) * 0.4;
+    grave.rotation.z = (Math.random() - 0.5) * 0.4;
+    graves.add(grave);
+}
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
+camera.position.z = 4;
+camera.position.y = 4;
+camera.lookAt(floor.position);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animation);
 
-directionalLight.position.z = 1;
-directionalLight.lookAt(sphere.position);
-// const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-// scene.add(directionalLightCameraHelper);
-// const spotLightCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
-// scene.add(spotLightCameraHelper);
 
 renderer.domElement.className = "web-gl";
 document.body.appendChild(renderer.domElement);
@@ -107,15 +119,18 @@ window.addEventListener("dblclick", () => {
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-/*
-  Debug
- */
 const gui = new dat.GUI();
-gui.add(material, 'metalness').min(0).max(1).step(0.0001);
-gui.add(material, 'roughness').min(0).max(1).step(0.0001);
-gui.add(material, 'aoMapIntensity').min(0).max(10).step(0.001);
-gui.add(material, 'displacementScale').min(0).max(1).step(0.0001);
-
+const ambientLight = new THREE.AmbientLight(0xb9d5ff, 0.3);
+gui.add(ambientLight, 'intensity').min(0).max(1).step(0.01);
+scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xb9d5ff);
+directionalLight.position.set(4, 5, -2);
+gui.add(directionalLight, 'intensity').min(0).max(1).step(0.001);
+gui.add(directionalLight.position, 'x').min(-5).max(5).step(0.001);
+gui.add(directionalLight.position, 'y').min(-5).max(5).step(0.001);
+gui.add(directionalLight.position, 'z').min(-5).max(5).step(0.001);
+scene.add(directionalLight);
+scene.add(directionalLight.target);
 
 function animation() {
     controls.update();
