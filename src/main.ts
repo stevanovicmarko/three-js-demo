@@ -17,7 +17,7 @@ const doorMetalnessTexture = textureLoader.load("../resources/door/metalness.jpg
 const doorRoughnessTexture = textureLoader.load("../resources/door/roughness.jpg");
 
 const bricksColorTexture = textureLoader.load("../resources/bricks/color.jpg");
-const bricksAmbientOcclustionTexture = textureLoader.load("../resources/bricks/ambientOcclusion.jpg");
+const bricksAmbientOcclusionTexture = textureLoader.load("../resources/bricks/ambientOcclusion.jpg");
 const bricksNormalTexture = textureLoader.load("../resources/bricks/normal.jpg");
 const bricksRoughnessTexture = textureLoader.load("../resources/bricks/roughness.jpg");
 
@@ -67,7 +67,7 @@ const house = new THREE.Group();
 const walls = new THREE.Mesh(new THREE.BoxBufferGeometry(4, 2.5, 4), new THREE.MeshStandardMaterial({
     transparent: true,
     map: bricksColorTexture,
-    aoMap: bricksAmbientOcclustionTexture,
+    aoMap: bricksAmbientOcclusionTexture,
     normalMap: bricksNormalTexture,
     roughnessMap: bricksRoughnessTexture
 }));
