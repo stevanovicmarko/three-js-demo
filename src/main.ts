@@ -24,6 +24,12 @@ obj3.position.x = 2;
 
 scene.add(obj1, obj2, obj3);
 
+const cursor = new THREE.Vector2();
+window.addEventListener('mousemove', (event) => {
+   cursor.x = ((event.clientX / window.innerWidth) * 2) - 1;
+   cursor.y = - ((event.clientY / window.innerHeight) * 2) + 1;
+});
+
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 10);
 camera.position.z = 4;
 
@@ -66,6 +72,8 @@ gui.width = 400;
 
 const clock = new THREE.Clock();
 const objectsToTest = [obj1, obj2, obj3];
+
+
 function animation() {
     const elapsedTime = clock.getElapsedTime();
     const intersectedObjects = raycaster.intersectObjects(objectsToTest);
@@ -78,9 +86,12 @@ function animation() {
         const color = (obj.object as THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>).material.color;
         color.set(0x0000ff);
     }
+
     obj1.position.y = Math.sin(elapsedTime * 0.3) * 1.5;
     obj2.position.y = Math.sin(elapsedTime * 0.8) * 1.5;
     obj3.position.y = Math.sin(elapsedTime * 1.4) * 1.5;
+
+    raycaster.setFromCamera(cursor, camera);
     controls.update();
     renderer.render(scene, camera);
 }
