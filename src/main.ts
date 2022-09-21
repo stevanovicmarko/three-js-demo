@@ -1,28 +1,55 @@
 import * as THREE from 'three';
 import "./style.css";
 import * as dat from "dat.gui";
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import * as CANNON from 'cannon';
 
 const scene = new THREE.Scene();
 
-const obj1 = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.5, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-);
-obj1.position.x = -2;
+// const textureLoader = new THREE.TextureLoader();
+const cubeTextureLoader = new THREE.CubeTextureLoader();
 
-const obj2 = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.5, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-);
+const environmentMapTexture = cubeTextureLoader.load([
+    './resources/environmentMaps/0/px.png',
+    './resources/environmentMaps/0/nx.png',
+    './resources/environmentMaps/0/py.png',
+    './resources/environmentMaps/0/ny.png',
+    './resources/environmentMaps/0/pz.png'
+]);
 
-const obj3 = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.5, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-);
-obj3.position.x = 2;
 
-scene.add(obj1, obj2, obj3);
+const world = new CANNON.World();
+world.gravity.set(0, -9.81, 0);
+
+
+
+const sphereShape = new CANNON.Sphere(0.5);
+const sphereBody = new CANNON.Body({
+    mass: 1,
+    position: new CANNON.Vec3(0, 3, 0),
+    shape: sphereShape
+});
+const floorShape = new CANNON.Plane();
+const floorBody = new CANNON.Body({
+    mass: 0
+});
+floorBody.addShape(floorShape);
+floorBody.quaternion.setFromAxisAngle( new CANNON.Vec3(-1, 0, 0), Math.PI * 0.5);
+
+const defaultMaterial = new CANNON.Material('default');
+
+const defaultContactMaterial = new CANNON.ContactMaterial(defaultMaterial, defaultMaterial, {
+    friction: 0.1,
+    restitution: 0.7
+});
+
+
+sphereBody.applyLocalForce(new CANNON.Vec3(150, 0, 0), new CANNON.Vec3(0, 0, 0));
+
+world.addBody(sphereBody);
+world.addBody(floorBody);
+
+world.defaultContactMaterial = defaultContactMaterial;
 
 const cursor = new THREE.Vector2();
 window.addEventListener('mousemove', (event) => {
@@ -30,17 +57,56 @@ window.addEventListener('mousemove', (event) => {
    cursor.y = - ((event.clientY / window.innerHeight) * 2) + 1;
 });
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 10);
-camera.position.z = 4;
+const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 32, 32),
+    new THREE.MeshStandardMaterial({
+        metalness: 0.3,
+        roughness: 0.4,
+        envMap: environmentMapTexture
+    })
+);
 
-const raycaster = new THREE.Raycaster();
-const rayOrigin = new THREE.Vector3(-3, 0, 0);
-const rayDirection = new THREE.Vector3(10, 0, 0).normalize();
-raycaster.set(rayOrigin, rayDirection);
+sphere.castShadow = true;
+sphere.position.y = 0.5;
+scene.add(sphere);
+
+const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(10, 10),
+    new THREE.MeshStandardMaterial({
+        color: 0x777777,
+        metalness: 0.3,
+        roughness: 0.4,
+        envMap: environmentMapTexture
+    })
+);
+floor.receiveShadow = true;
+floor.rotation.x = - Math.PI * 0.5;
+scene.add(floor);
+
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.set(1024, 1024);
+directionalLight.shadow.camera.far = 15;
+directionalLight.shadow.camera.left = -7;
+directionalLight.shadow.camera.top = 7;
+directionalLight.shadow.camera.right = 7;
+directionalLight.shadow.camera.bottom = -7;
+directionalLight.position.set(5, 5, 5);
+
+scene.add(directionalLight);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
+camera.position.set(-3, 3, 3)
 
 
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animation);
@@ -71,27 +137,19 @@ const gui = new dat.GUI();
 gui.width = 400;
 
 const clock = new THREE.Clock();
-const objectsToTest = [obj1, obj2, obj3];
-
+let oldElapsedTime = 0;
 
 function animation() {
     const elapsedTime = clock.getElapsedTime();
-    const intersectedObjects = raycaster.intersectObjects(objectsToTest);
+    const deltaTime = elapsedTime - oldElapsedTime;
+    oldElapsedTime = elapsedTime;
 
-    for (const obj of objectsToTest) {
-        obj.material.color.set(0xff0000);
-    }
+    sphereBody.applyForce(new CANNON.Vec3(-0.5, 0, 0), sphereBody.position);
+    // Update physics world
+    world.step(1/60, deltaTime, 3);
+    sphere.position.copy(sphereBody.position as unknown as THREE.Vector3);
 
-    for (const obj of intersectedObjects) {
-        const color = (obj.object as THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>).material.color;
-        color.set(0x0000ff);
-    }
 
-    obj1.position.y = Math.sin(elapsedTime * 0.3) * 1.5;
-    obj2.position.y = Math.sin(elapsedTime * 0.8) * 1.5;
-    obj3.position.y = Math.sin(elapsedTime * 1.4) * 1.5;
-
-    raycaster.setFromCamera(cursor, camera);
     controls.update();
     renderer.render(scene, camera);
 }
