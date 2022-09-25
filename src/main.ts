@@ -22,13 +22,6 @@ const world = new CANNON.World();
 world.gravity.set(0, -9.81, 0);
 
 
-
-const sphereShape = new CANNON.Sphere(0.5);
-const sphereBody = new CANNON.Body({
-    mass: 1,
-    position: new CANNON.Vec3(0, 3, 0),
-    shape: sphereShape
-});
 const floorShape = new CANNON.Plane();
 const floorBody = new CANNON.Body({
     mass: 0
@@ -44,9 +37,6 @@ const defaultContactMaterial = new CANNON.ContactMaterial(defaultMaterial, defau
 });
 
 
-sphereBody.applyLocalForce(new CANNON.Vec3(150, 0, 0), new CANNON.Vec3(0, 0, 0));
-
-world.addBody(sphereBody);
 world.addBody(floorBody);
 
 world.defaultContactMaterial = defaultContactMaterial;
@@ -57,18 +47,7 @@ window.addEventListener('mousemove', (event) => {
    cursor.y = - ((event.clientY / window.innerHeight) * 2) + 1;
 });
 
-const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 32, 32),
-    new THREE.MeshStandardMaterial({
-        metalness: 0.3,
-        roughness: 0.4,
-        envMap: environmentMapTexture
-    })
-);
 
-sphere.castShadow = true;
-sphere.position.y = 0.5;
-scene.add(sphere);
 
 const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(10, 10),
@@ -130,11 +109,54 @@ window.addEventListener("dblclick", () => {
     }
 });
 
+const objectsToUpdate: {mesh: THREE.Mesh, body: CANNON.Body}[] = [];
+
+const sphereGeometry = new THREE.SphereGeometry(1, 20, 20);
+const sphereMaterial = new THREE.MeshStandardMaterial({
+    metalness: 0.3,
+    roughness: 0.4,
+    envMap: environmentMapTexture
+})
+
+
+const createSphere = (radius: number, position: THREE.Vector3) => {
+
+    const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    mesh.scale.set(radius, radius, radius);
+    mesh.castShadow = true;
+    mesh.position.copy(position);
+    scene.add(mesh);
+
+    const shape = new CANNON.Sphere(radius);
+    const body = new CANNON.Body({
+        mass: 1,
+        position: new CANNON.Vec3(0, 3, 0),
+        shape,
+        material: defaultMaterial
+    });
+    body.position.copy(new CANNON.Vec3(position.x, position.y, position.z));
+    world.addBody(body);
+
+    objectsToUpdate.push({
+        mesh,
+        body
+    });
+}
+
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
 const gui = new dat.GUI();
 gui.width = 400;
+const debugObject = {
+    createSphere: () => {
+        createSphere(Math.random() * 0.5,
+                          new THREE.Vector3((Math.random() - 0.5) * 3, 3, (Math.random() - 0.5) * 3));
+    }
+} as const;
+
+gui.add(debugObject, 'createSphere');
 
 const clock = new THREE.Clock();
 let oldElapsedTime = 0;
@@ -144,11 +166,12 @@ function animation() {
     const deltaTime = elapsedTime - oldElapsedTime;
     oldElapsedTime = elapsedTime;
 
-    sphereBody.applyForce(new CANNON.Vec3(-0.5, 0, 0), sphereBody.position);
     // Update physics world
     world.step(1/60, deltaTime, 3);
-    sphere.position.copy(sphereBody.position as unknown as THREE.Vector3);
 
+    for (const item of objectsToUpdate) {
+        item.mesh.position.copy(new THREE.Vector3(item.body.position.x, item.body.position.y, item.body.position.z));
+    }
 
     controls.update();
     renderer.render(scene, camera);
