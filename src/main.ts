@@ -9,8 +9,6 @@ import fragmentShader from "./shaders/fragment.glsl?raw";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 const scene = new THREE.Scene();
-const textureLoader = new THREE.TextureLoader();
-const flagTexture = textureLoader.load("./resources/flag/flag.png");
 
 const gui = new dat.GUI();
 gui.width = 400;
@@ -24,7 +22,7 @@ window.addEventListener("mousemove", function(event) {
 });
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
-camera.position.set(0, 0, 3);
+camera.position.set(0, 0, 1);
 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -40,25 +38,19 @@ renderer.setAnimationLoop(animation);
 // Geometry
 const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
 
-const uniforms = {
-  uFrequency: { value: new THREE.Vector2(10, 5) },
-  uTime: { value: 0 },
-  uTexture: { value: flagTexture }
-} as const;
 
 // Material
 const material = new THREE.ShaderMaterial({
   vertexShader,
   fragmentShader,
-  uniforms
+  uniforms: {
+    uTime: { value: 0.0 }
+  },
+  side: THREE.DoubleSide
 });
-
-gui.add(material.uniforms["uFrequency"].value, "x").min(0).max(20).step(0.01).name("frequency X");
-gui.add(material.uniforms["uFrequency"].value, "y").min(0).max(20).step(0.01).name("frequency Y");
 
 // Mesh
 const mesh = new THREE.Mesh(geometry, material);
-mesh.scale.y = 2 / 3;
 scene.add(mesh);
 
 renderer.domElement.className = "web-gl";
@@ -90,7 +82,6 @@ function animation() {
   // const deltaTime = elapsedTime - oldElapsedTime;
   // oldElapsedTime = elapsedTime;
   material.uniforms["uTime"].value = elapsedTime;
-
   controls.update();
   renderer.render(scene, camera);
 }
